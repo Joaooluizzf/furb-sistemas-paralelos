@@ -8,27 +8,28 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class Server {
 
-	Lock lock = new ReentrantLock();
-	Condition onGame = lock.newCondition();
-	private List<String> players;
+	private ServerListner listner;
+	private Party party;
 
-	public void connect(List<String> players) {
-		lock.lock();
-		this.players = players;
-		System.out.println("Jogadores Conectados: " + players.toString());
-		if (players.size() == Constantes.SERVER_CAPACITY) {
-			try {
-				onGame.await(30, TimeUnit.SECONDS);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+	public Server(ServerListner listner) {
+		this.listner = listner;
+	}
+
+	public void connect(Party party) {
+		this.party = party;
+		System.out.println("Jogadores Conectados: " + party.toString());
+		try {
+			Thread.sleep(30000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		disconnect();
 	}
 
-	private void disconnect() {
-		System.out.println("Jogadores Desconectados: " + players.toString());
-		onGame.signal();
+	public void disconnect() {
+		System.out.println("Jogadores Desconectados: " + party.toString());
+		listner.onDisconnect(this);
 	}
 
 }

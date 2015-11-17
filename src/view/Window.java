@@ -1,28 +1,20 @@
 package view;
 
-import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
-import java.awt.Graphics;
-import java.awt.Insets;
 import java.awt.Toolkit;
-import java.util.List;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
-import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.border.Border;
 
-import controller.Listener;
-import controller.PartyMaker;
-import controller.Queue;
-import controller.Server;
+import controller.QueueManager;
+import java.awt.event.KeyAdapter;
 
-public class Window extends JFrame implements Listener {
+public class Window extends JFrame {
 
 	public static void main(String[] args) {
 		Window window = new Window();
@@ -32,16 +24,21 @@ public class Window extends JFrame implements Listener {
 	JButton btOpenConnection;
 	JTextField tfPlayerName;
 	JLabel lPlayerName;
-	Server server = new Server();
 
-	Queue queue = new Queue();
-	PartyMaker partyMaker = new PartyMaker(this);
-	Thread ctrl = new Thread(() -> partyMaker.process());
+	QueueManager ctrl = new QueueManager();
 
 	Window() {
 		lPlayerName = new JLabel("Player name:");
 
 		tfPlayerName = new JTextField();
+		tfPlayerName.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent arg0) {
+				if (arg0.getKeyCode() == KeyEvent.VK_ENTER) {
+					openConnection();
+				}
+			}
+		});
 		btOpenConnection = new JButton("Nova conexão");
 		btOpenConnection.addActionListener(l -> openConnection());
 
@@ -49,33 +46,21 @@ public class Window extends JFrame implements Listener {
 		tfPlayerName.setBounds(100, 10, 90, 30);
 		btOpenConnection.setBounds(210, 10, 200, 30);
 
-		add(lPlayerName);
-		add(tfPlayerName);
-		add(btOpenConnection);
+		getContentPane().add(lPlayerName);
+		getContentPane().add(tfPlayerName);
+		getContentPane().add(btOpenConnection);
 
 		setTitle("Wait and notify");
 		setResizable(false);
-		setLayout(null);
+		getContentPane().setLayout(null);
 		setSize(425, 100);
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		setLocation(dim.width / 2 - this.getSize().width / 2, dim.height / 2 - this.getSize().height / 2);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		ctrl.start();
 	}
 
 	void openConnection() {
-		queue.playerConect(tfPlayerName.getText());
-		partyMaker.onPlayerAdded();
-	}
-
-	@Override
-	public String getFisrtPlayer() {
-		return queue.getNextPlayer();
-	}
-
-	@Override
-	public void connect(List<String> party) {
-		new Thread(() -> server.connect(party)).start();;
+		ctrl.addPlayer(tfPlayerName.getText());
 	}
 
 }
